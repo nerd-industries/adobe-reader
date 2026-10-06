@@ -17,8 +17,14 @@
     To remove it: Settings > Apps > "Adobe Acrobat (64-bit)" > Uninstall.
 #>
 
+# Everything runs inside & { } so that under `irm | iex` nothing leaks into the
+# tech's PowerShell window afterwards (ErrorActionPreference, functions,
+# variables). `return` still works anywhere in here to stop early.
+& {
+
 $ErrorActionPreference = 'Stop'
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+# Add TLS 1.2 without switching off TLS 1.3 or anything else already enabled.
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
 # When run via `irm ... | iex` the #Requires line is NOT enforced (that only
 # works for a real .ps1 file), so check for elevation ourselves.
@@ -190,4 +196,6 @@ catch {
     Write-Log "FAILED: $($_.Exception.Message)" 'ERROR'
     Write-Host "  Log: $LogFile" -ForegroundColor Yellow
     Write-Host ""
+}
+
 }
